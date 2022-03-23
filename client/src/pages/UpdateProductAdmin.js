@@ -30,24 +30,37 @@ export default function UpdateProductAdmin() {
   }); //Store product data
 
   // Fetching detail product data by id from database
-  useQuery('productCache', async () => {
+  let { data: products, refetch } = useQuery('productCache', async () => {
     const response = await API.get('/product/' + id);
-    setPreview(response.data.data.image);
-    setForm({
-      ...form,
-      name: response.data.data.name,
-      desc: response.data.data.desc,
-      price: response.data.data.price,
-      qty: response.data.data.qty,
-    });
-    setProduct(response.data.data);
+    return response.data.data;
   });
 
   // Fetching category data
-  useQuery('categoriesCache', async () => {
-    const response = await API.get('/categories');
-    setCategories(response.data.data);
-  });
+  let { data: categoriesData, refetch: refetchCategories } = useQuery(
+    'categoriesCache',
+    async () => {
+      const response = await API.get('/categories');
+      return response.data.data;
+    }
+  );
+
+  useEffect(() => {
+    if (products) {
+      setPreview(products.image);
+      setForm({
+        ...form,
+        name: products.name,
+        desc: products.desc,
+        price: products.price,
+        qty: products.qty,
+      });
+      setProduct(products);
+    }
+
+    if (categoriesData) {
+      setCategories(categoriesData);
+    }
+  }, [products]);
 
   // For handle if category selected
   const handleChangeCategoryId = (e) => {

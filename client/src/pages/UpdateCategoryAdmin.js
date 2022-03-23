@@ -15,10 +15,17 @@ export default function UpdateCategoryAdmin() {
   const { id } = useParams();
   const [category, setCategory] = useState({ name: '' });
 
-  useQuery('categoryCache', async () => {
+  let { data: categoryData } = useQuery('categoryCache', async () => {
     const response = await API.get('/category/' + id);
-    setCategory({ name: response.data.data.name });
+    return response.data.data.name;
   });
+
+  useEffect(() => {
+    if (categoryData) {
+      console.log(categoryData);
+      setCategory({ name: categoryData });
+    }
+  }, [categoryData]);
 
   const handleChange = (e) => {
     setCategory({
@@ -39,7 +46,7 @@ export default function UpdateCategoryAdmin() {
 
       const body = JSON.stringify(category);
 
-      const response = await API.patch('/category/' + id, body, config);
+      await API.patch('/category/' + id, body, config);
 
       navigate('/category-admin');
     } catch (error) {

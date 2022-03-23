@@ -1,147 +1,225 @@
-## Delete data
+## Update data
 
-- Delete product data
+- Update product data
 
-  > File : `client/src/pages/ProductAdmin.js`
+  > File : `client/src/pages/UpdateProductAdmin.js`
 
-  Don't forget to Get `useMutation`:
+  Don't forget to get `useMutation` :
 
   ```javascript
-  // useMutation
   import { useQuery, useMutation } from 'react-query';
   ```
 
   Get API config :
 
   ```javascript
-  // API config
   import { API } from '../config/api';
   ```
 
-  Variable for delete product data :
+  Store data on useState :
 
   ```javascript
-  // Variabel for delete product data
-  const [idDelete, setIdDelete] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [categories, setCategories] = useState([]); //Store all category data
+  const [categoryId, setCategoryId] = useState([]); //Save the selected category id
+  const [preview, setPreview] = useState(null); //For image preview
+  const [product, setProduct] = useState({}); //Store product data
+  const [form, setForm] = useState({
+    image: '',
+    name: '',
+    desc: '',
+    price: '',
+    qty: '',
+  }); //Store product data
   ```
 
-  Modal Confirm delete data :
+  Fetching product detail and categpry data :
 
   ```javascript
-  // Modal Confirm delete data
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  // Fetching detail product data by id from database
+  let { data: products, refetch } = useQuery('productCache', async () => {
+    const response = await API.get('/product/' + id);
+    return response.data.data;
+  });
+
+  // Fetching category data
+  let { data: categoriesData, refetch: refetchCategories } = useQuery(
+    'categoriesCache',
+    async () => {
+      const response = await API.get('/categories');
+      return response.data.data;
+    }
+  );
+
+  useEffect(() => {
+    if (products) {
+      setPreview(products.image);
+      setForm({
+        ...form,
+        name: products.name,
+        desc: products.desc,
+        price: products.price,
+        qty: products.qty,
+      });
+      setProduct(products);
+    }
+
+    if (categoriesData) {
+      setCategories(categoriesData);
+    }
+  }, [products]);
   ```
 
-  Get id product & show modal confirm delete data :
+  Handle if category selected :
 
   ```javascript
-  // For get id product & show modal confirm delete data
-  const handleDelete = (id) => {
-    setIdDelete(id);
-    handleShow();
+  // For handle if category selected
+  const handleChangeCategoryId = (e) => {
+    const id = e.target.value;
+    const checked = e.target.checked;
+
+    if (checked == true) {
+      // Save category id if checked
+      setCategoryId([...categoryId, parseInt(id)]);
+    } else {
+      // Delete category id from variable if unchecked
+      let newCategoryId = categoryId.filter((categoryIdItem) => {
+        return categoryIdItem != id;
+      });
+      setCategoryId(newCategoryId);
+    }
   };
   ```
 
-  If confirm is true, execute delete data with `useMutation` :
+  Handle change data on form
 
   ```javascript
-  // If confirm is true, execute delete data
-  const deleteById = useMutation(async (id) => {
+  // Handle change data on form
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]:
+        e.target.type === 'file' ? e.target.files : e.target.value,
+    });
+
+    // Create image url for preview
+    if (e.target.type === 'file') {
+      let url = URL.createObjectURL(e.target.files[0]);
+      setPreview(url);
+    }
+  };
+  ```
+
+  Handle submit data :
+
+  ```javascript
+  const handleSubmit = useMutation(async (e) => {
     try {
-      await API.delete(`/product/${id}`);
-      refetch();
+      e.preventDefault();
+
+      // Configuration
+      const config = {
+        headers: {
+          'Content-type': 'multipart/form-data',
+        },
+      };
+
+      // Store data with FormData as object
+      const formData = new FormData();
+      if (form.image) {
+        formData.set('image', form?.image[0], form?.image[0]?.name);
+      }
+      formData.set('name', form.name);
+      formData.set('desc', form.desc);
+      formData.set('price', form.price);
+      formData.set('qty', form.qty);
+      formData.set('categoryId', categoryId);
+
+      // Insert product data
+      const response = await API.patch(
+        '/product/' + product.id,
+        formData,
+        config
+      );
+      console.log(response.data);
+
+      navigate('/product-admin');
     } catch (error) {
       console.log(error);
     }
   });
   ```
 
-  Close modal and execute delete data :
+  Refactor `form` element :
 
-  ```javascript
-  useEffect(() => {
-    if (confirmDelete) {
-      // Close modal confirm delete data
-      handleClose();
-      // execute delete data by id function
-      deleteById.mutate(idDelete);
-      setConfirmDelete(null);
-    }
-  }, [confirmDelete]);
+  ```html
+  <form onSubmit={(e) => handleSubmit.mutate(e)}>
   ```
 
-- Delete category data
+- Update category data
 
-  > File : `client/src/pages/CategoryAdmin.js`
+  > File : `client/src/pages/UpdateCategoryAdmin.js`
 
-  Don't forget to Get `useMutation`:
+  Don't forget to get `useMutation` :
 
   ```javascript
-  // useMutation
   import { useQuery, useMutation } from 'react-query';
   ```
 
   Get API config :
 
   ```javascript
-  // API config
   import { API } from '../config/api';
   ```
 
-  Variabel for delete category data :
+  Use useState for store data :
 
   ```javascript
-  // Variabel for delete category data
-  const [idDelete, setIdDelete] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [category, setCategory] = useState({ name: '' });
   ```
 
-  Modal Confirm delete data :
+  Fething category data by id :
 
   ```javascript
-  // Modal Confirm delete data
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
+  // Fetching category data by id from database
+  let { data: categoryData } = useQuery('categoryCache', async () => {
+    const response = await API.get('/category/' + id);
+    return response.data.data.name;
+  });
+
+  useEffect(() => {
+    if (categoryData) {
+      console.log(categoryData);
+      setCategory({ name: categoryData });
+    }
+  }, [categoryData]);
   ```
 
-  Get id category & show modal confirm delete data :
+  Handle submit data :
 
   ```javascript
-  // For get id category & show modal confirm delete data
-  const handleDelete = (id) => {
-    setIdDelete(id);
-    handleShow();
-  };
-  ```
-
-  If confirm is true, execute delete data :
-
-  ```javascript
-  // If confirm is true, execute delete data
-  const deleteById = useMutation(async (id) => {
+  const handleSubmit = useMutation(async (e) => {
     try {
-      await API.delete(`/category/${id}`);
-      refetch();
+      e.preventDefault();
+
+      const config = {
+        headers: {
+          'Content-type': 'application/json',
+        },
+      };
+
+      const body = JSON.stringify(category);
+
+      await API.patch('/category/' + id, body, config);
+
+      navigate('/category-admin');
     } catch (error) {
       console.log(error);
     }
   });
   ```
 
-  Close modal and execute delete data :
+  Refactor `form` element :
 
-  ```javascript
-  useEffect(() => {
-    if (confirmDelete) {
-      // Close modal confirm delete data
-      handleClose();
-      // execute delete data by id function
-      deleteById.mutate(idDelete);
-      setConfirmDelete(null);
-    }
-  }, [confirmDelete]);
+  ```html
+  <form onSubmit={(e) => handleSubmit.mutate(e)}>
   ```
