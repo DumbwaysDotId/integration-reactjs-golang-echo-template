@@ -1,10 +1,12 @@
-## Update data
+## Fetching data
 
-- Update product data
+- Fetching product data
 
-  > File : `client/src/pages/UpdateProductAdmin.js`
+  > File product for customer : `client/src/pages/Product.js`
 
-  Don't forget to get `useMutation` :
+  > File product for admin : `client/src/pages/ProductAdmin.js`
+
+  Get useQuery from `react-query` :
 
   ```javascript
   import { useQuery, useMutation } from 'react-query';
@@ -16,150 +18,39 @@
   import { API } from '../config/api';
   ```
 
-  Store data on useState :
+  Fetching product data process :
 
   ```javascript
-  const [categories, setCategories] = useState([]); //Store all category data
-  const [categoryId, setCategoryId] = useState([]); //Save the selected category id
-  const [preview, setPreview] = useState(null); //For image preview
-  const [product, setProduct] = useState({}); //Store product data
-  const [form, setForm] = useState({
-    image: '',
-    name: '',
-    desc: '',
-    price: '',
-    qty: '',
-  }); //Store product data
-  ```
-
-  Fetching product detail and categpry data :
-
-  ```javascript
-  // Fetching detail product data by id from database
-  let { data: products, refetch } = useQuery('productCache', async () => {
-    const response = await API.get('/product/' + id);
+  // Fetching product data from database
+  let { data: products } = useQuery('productsCache', async () => {
+    const response = await API.get('/products');
     return response.data.data;
   });
-
-  // Fetching category data
-  let { data: categoriesData, refetch: refetchCategories } = useQuery(
-    'categoriesCache',
-    async () => {
-      const response = await API.get('/categories');
-      return response.data.data;
-    }
-  );
-
-  useEffect(() => {
-    if (products) {
-      setPreview(products.image);
-      setForm({
-        ...form,
-        name: products.name,
-        desc: products.desc,
-        price: products.price,
-        qty: products.qty,
-      });
-      setProduct(products);
-    }
-
-    if (categoriesData) {
-      setCategories(categoriesData);
-    }
-  }, [products]);
   ```
 
-  Handle if category selected :
+* Fetching detail product data
 
-  ```javascript
-  // For handle if category selected
-  const handleChangeCategoryId = (e) => {
-    const id = e.target.value;
-    const checked = e.target.checked;
+  > File : `client/src/pages/DetailProduct.js`
 
-    if (checked == true) {
-      // Save category id if checked
-      setCategoryId([...categoryId, parseInt(id)]);
-    } else {
-      // Delete category id from variable if unchecked
-      let newCategoryId = categoryId.filter((categoryIdItem) => {
-        return categoryIdItem != id;
-      });
-      setCategoryId(newCategoryId);
-    }
-  };
-  ```
+* Fetching profile data
 
-  Handle change data on form
+  > File : `client/src/pages/Profile.js`
 
-  ```javascript
-  // Handle change data on form
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]:
-        e.target.type === 'file' ? e.target.files : e.target.value,
-    });
+* Fetching transaction data
 
-    // Create image url for preview
-    if (e.target.type === 'file') {
-      let url = URL.createObjectURL(e.target.files[0]);
-      setPreview(url);
-    }
-  };
-  ```
+  > File : `client/src/pages/Profile.js`
 
-  Handle submit data :
+* Fetching category data
 
-  ```javascript
-  const handleSubmit = useMutation(async (e) => {
-    try {
-      e.preventDefault();
+  > File : `client/src/pages/CategoryAdmin.js`
 
-      // Configuration
-      const config = {
-        headers: {
-          'Content-type': 'multipart/form-data',
-        },
-      };
+* Insert transaction (buy)
 
-      // Store data with FormData as object
-      const formData = new FormData();
-      if (form.image) {
-        formData.set('image', form?.image[0], form?.image[0]?.name);
-      }
-      formData.set('name', form.name);
-      formData.set('desc', form.desc);
-      formData.set('price', form.price);
-      formData.set('qty', form.qty);
-      formData.set('categoryId', categoryId);
+  **This step after fetching product detail data**
 
-      // Insert product data
-      const response = await API.patch(
-        '/product/' + product.id,
-        formData,
-        config
-      );
-      console.log(response.data);
+  > File : `client/src/pages/DetailProduct.js`
 
-      navigate('/product-admin');
-    } catch (error) {
-      console.log(error);
-    }
-  });
-  ```
-
-  Refactor `form` element :
-
-  ```html
-  <form onSubmit={(e) => handleSubmit.mutate(e)}>
-  ```
-
-- Update category data
-
-  > File : `client/src/pages/UpdateCategoryAdmin.js`
-
-  Don't forget to get `useMutation` :
+  Don't forget to Get `useMutation` :
 
   ```javascript
   import { useQuery, useMutation } from 'react-query';
@@ -171,33 +62,12 @@
   import { API } from '../config/api';
   ```
 
-  Use useState for store data :
+  `We get product data from fetching product data process`
+
+  Handle buy process & insert transaction data to database :
 
   ```javascript
-  const [category, setCategory] = useState({ name: '' });
-  ```
-
-  Fething category data by id :
-
-  ```javascript
-  // Fetching category data by id from database
-  let { data: categoryData } = useQuery('categoryCache', async () => {
-    const response = await API.get('/category/' + id);
-    return response.data.data.name;
-  });
-
-  useEffect(() => {
-    if (categoryData) {
-      console.log(categoryData);
-      setCategory({ name: categoryData });
-    }
-  }, [categoryData]);
-  ```
-
-  Handle submit data :
-
-  ```javascript
-  const handleSubmit = useMutation(async (e) => {
+  const handleBuy = useMutation(async (e) => {
     try {
       e.preventDefault();
 
@@ -207,19 +77,19 @@
         },
       };
 
-      const body = JSON.stringify(category);
+      const data = {
+        idProduct: product.id,
+        idSeller: product.user.id,
+        price: product.price,
+      };
 
-      await API.patch('/category/' + id, body, config);
+      const body = JSON.stringify(data);
 
-      navigate('/category-admin');
+      await API.post('/transaction', body, config);
+
+      navigate('/profile');
     } catch (error) {
       console.log(error);
     }
   });
-  ```
-
-  Refactor `form` element :
-
-  ```html
-  <form onSubmit={(e) => handleSubmit.mutate(e)}>
   ```
