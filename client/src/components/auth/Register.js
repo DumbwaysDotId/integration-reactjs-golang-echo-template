@@ -1,14 +1,11 @@
 import React, { useContext, useState } from 'react';
 import { UserContext } from '../../context/userContext';
-import { useNavigate } from 'react-router-dom';
 import { Alert } from 'react-bootstrap';
 import { useMutation } from 'react-query';
 
 import { API } from '../../config/api';
 
 export default function Register() {
-  let navigate = useNavigate();
-
   const title = 'Register';
   document.title = 'DumbMerch | ' + title;
 
