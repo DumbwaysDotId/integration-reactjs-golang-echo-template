@@ -1,45 +1,50 @@
 # Prepare
 
-## Server Side
-
 Before doing the integration, we make some preparations, including:
 
 - Store front-end (client) & back-end (server) in one folder
-- Install package Concurrently
 
-  ```
-  npm i concurrently
-  ```
+## Server Side
 
-- Install package CORS
+- Install [Gorilla/handlers](https://pkg.go.dev/github.com/gorilla/handlers) package
 
-  ```
-  npm i cors
+  ```bash
+  go get -u github.com/gorilla/handlers
   ```
 
-- Add code below inside index.js file `server/index.js`
+- Import and Setup the Gorilla/handlers package for CORS
 
-  ```javascript
-  const port = 5000;
+  > File: `main.go`
 
-  app.use(express.json());
-  app.use(cors());
+  - Import package
+
+  ```go
+  import (
+    "dumbmerch/database"
+    "dumbmerch/pkg/mysql"
+    "dumbmerch/routes"
+    "fmt"
+    "net/http"
+
+    "github.com/gorilla/handlers" // import this package ...
+    "github.com/gorilla/mux"
+    "github.com/joho/godotenv"
+  )
   ```
 
-- Add code below inside package.json file `server/package.json`
+- Setup for CORS
 
-  ```javascript
-  "scripts": {
-    "start": "nodemon server.js",
-    "client": "npm start --prefix ../client",
-    "dev": "concurrently \"npm start\" \"npm run client\""
-  },
-  ```
+  ```go
+  // Setup allowed Header, Method, and Origin for CORS on this below code ...
+  var AllowedHeaders = handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+  var AllowedMethods = handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS", "PATCH", "DELETE"})
+  var AllowedOrigins = handlers.AllowedOrigins([]string{"*"})
 
-- Run this code:
+  var port = "5000"
+  fmt.Println("server running localhost:"+port)
 
-  ```
-  npm run dev
+  // Embed the setup allowed in 2 parameter on this below code ...
+  http.ListenAndServe("localhost:"+port, handlers.CORS(AllowedHeaders, AllowedMethods, AllowedOrigins)(r))
   ```
 
 ## Client Side
@@ -57,17 +62,17 @@ Before doing the integration, we make some preparations, including:
 - Create API config in client side `client/src/config/api.js`
 
   ```javascript
-  import axios from 'axios';
+  import axios from "axios";
 
   export const API = axios.create({
-    baseURL: 'http://localhost:5000/api/v1/',
+    baseURL: "http://localhost:5000/api/v1/",
   });
 
   export const setAuthToken = (token) => {
     if (token) {
-      API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
-      delete API.defaults.headers.commin['Authorization'];
+      delete API.defaults.headers.commin["Authorization"];
     }
   };
   ```
@@ -85,7 +90,7 @@ Before doing the integration, we make some preparations, including:
   - Import QueryClient and QueryClientProvider :
 
     ```javascript
-    import { QueryClient, QueryClientProvider } from 'react-query';
+    import { QueryClient, QueryClientProvider } from "react-query";
     ```
 
   - Init Client :
@@ -103,6 +108,6 @@ Before doing the integration, we make some preparations, including:
           </QueryClientProvider>
         </UserContextProvider>
       </React.StrictMode>,
-      document.getElementById('root')
+      document.getElementById("root")
     );
     ```
