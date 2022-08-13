@@ -18,19 +18,19 @@ Before doing the integration, we make some preparations, including:
 
   - Import package
 
-  ```go
-  import (
-    "dumbmerch/database"
-    "dumbmerch/pkg/mysql"
-    "dumbmerch/routes"
-    "fmt"
-    "net/http"
+    ```go
+    import (
+      "dumbmerch/database"
+      "dumbmerch/pkg/mysql"
+      "dumbmerch/routes"
+      "fmt"
+      "net/http"
 
-    "github.com/gorilla/handlers" // import this package ...
-    "github.com/gorilla/mux"
-    "github.com/joho/godotenv"
-  )
-  ```
+      "github.com/gorilla/handlers" // import this package ...
+      "github.com/gorilla/mux"
+      "github.com/joho/godotenv"
+    )
+    ```
 
   - Setup for CORS
 
