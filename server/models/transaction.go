@@ -5,7 +5,7 @@ import "time"
 type Transaction struct {
 	ID        int                  `json:"id" gorm:"primary_key:auto_increment"`
 	ProductID int                  `json:"product_id"`
-	Product   ProductResponse      `json:"product" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Product   ProductResponse      `json:"product"`
 	BuyerID   int                  `json:"buyer_id"`
 	Buyer     UsersProfileResponse `json:"buyer"`
 	SellerID  int                  `json:"seller_id"`
@@ -15,4 +15,3 @@ type Transaction struct {
 	CreatedAt time.Time            `json:"-"`
 	UpdatedAt time.Time            `json:"-"`
 }
-

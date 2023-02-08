@@ -11,7 +11,7 @@ type CategoryRepository interface {
 	GetCategory(ID int) (models.Category, error)
 	CreateCategory(category models.Category) (models.Category, error)
 	UpdateCategory(category models.Category) (models.Category, error)
-	DeleteCategory(category models.Category) (models.Category, error)
+	DeleteCategory(category models.Category, ID int) (models.Category, error)
 }
 
 func RepositoryCategory(db *gorm.DB) *repository {
@@ -44,8 +44,8 @@ func (r *repository) UpdateCategory(category models.Category) (models.Category, 
 	return category, err
 }
 
-func (r *repository) DeleteCategory(category models.Category) (models.Category, error) {
-	err := r.db.Delete(&category).Error
+func (r *repository) DeleteCategory(category models.Category, ID int) (models.Category, error) {
+	err := r.db.Delete(&category, ID).Scan(&category).Error
 
 	return category, err
 }

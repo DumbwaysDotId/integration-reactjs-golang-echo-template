@@ -8,7 +8,7 @@ type Profile struct {
 	Gender    string               `json:"gender" gorm:"type: varchar(255)"`
 	Address   string               `json:"address" gorm:"type: text"`
 	UserID    int                  `json:"user_id"`
-	User      UsersProfileResponse `json:"user" gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	User      UsersProfileResponse `json:"user"`
 	CreatedAt time.Time            `json:"-"`
 	UpdatedAt time.Time            `json:"-"`
 }

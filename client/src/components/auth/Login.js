@@ -1,10 +1,10 @@
 import { useContext, useState } from 'react';
-import { UserContext } from '../../context/userContext';
-import { useNavigate } from 'react-router-dom';
 import { Alert } from 'react-bootstrap';
 import { useMutation } from 'react-query';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../../context/userContext';
 
-import { API } from '../../config/api';
+import { API, setAuthToken } from '../../config/api';
 
 export default function Login() {
   let navigate = useNavigate();
@@ -12,7 +12,7 @@ export default function Login() {
   const title = 'Login';
   document.title = 'DumbMerch | ' + title;
 
-  const [state, dispatch] = useContext(UserContext);
+  const [_, dispatch] = useContext(UserContext);
 
   const [message, setMessage] = useState(null);
   const [form, setForm] = useState({
@@ -33,41 +33,32 @@ export default function Login() {
     try {
       e.preventDefault();
 
-      // Configuration
-      const config = {
-        headers: {
-          'Content-type': 'application/json',
-        },
-      };
+      // Insert data for login process, you can also make this without any configuration, because axios would automatically handling it.
+      const response = await API.post('/login', form);
 
-      // Data body
-      const body = JSON.stringify(form);
+      console.log("login success : ", response);
 
-      // Insert data for login process
-      const response = await API.post('/login', body, config);
+      // Send data to useContext
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: response.data.data,
+      });
 
-      // Checking process
-      if (response?.status === 200) {
-        // Send data to useContext
-        dispatch({
-          type: 'LOGIN_SUCCESS',
-          payload: response.data.data,
-        });
+      setAuthToken(localStorage.token);
 
-        // Status check
-        if (response.data.data.status === 'admin') {
-          navigate('/complain-admin');
-        } else {
-          navigate('/');
-        }
-
-        const alert = (
-          <Alert variant="success" className="py-1">
-            Login success
-          </Alert>
-        );
-        setMessage(alert);
+      // Status check
+      if (response.data.data.role === 'admin') {
+        navigate('/complain-admin');
+      } else {
+        navigate('/');
       }
+
+      const alert = (
+        <Alert variant="success" className="py-1">
+          Login success
+        </Alert>
+      );
+      setMessage(alert);
     } catch (error) {
       const alert = (
         <Alert variant="danger" className="py-1">
@@ -75,7 +66,7 @@ export default function Login() {
         </Alert>
       );
       setMessage(alert);
-      console.log(error);
+      console.log("login failed : ", error);
     }
   });
 

@@ -1,16 +1,14 @@
-import React, { useState, useContext } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Col, Container, Row } from 'react-bootstrap';
 
-import { UserContext } from '../context/userContext';
 
-import NavbarAdmin from '../components/NavbarAdmin';
-import Contact from '../components/complain/Contact';
 import Chat from '../components/complain/Chat';
+import Contact from '../components/complain/Contact';
+import NavbarAdmin from '../components/NavbarAdmin';
 
 import dataContact from '../fakeData/contact';
 
 export default function ComplainAdmin() {
-  const [state] = useContext(UserContext);
   const [contact, setContact] = useState(null);
 
   const title = 'Complain admin';

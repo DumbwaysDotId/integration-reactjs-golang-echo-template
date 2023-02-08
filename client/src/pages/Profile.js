@@ -1,8 +1,8 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
 import dateFormat from 'dateformat';
-import convertRupiah from 'rupiah-format';
+import React, { useContext } from 'react';
+import { Col, Container, Row } from 'react-bootstrap';
 import { useQuery } from 'react-query';
+import convertRupiah from 'rupiah-format';
 
 import Navbar from '../components/Navbar';
 
@@ -19,8 +19,6 @@ export default function Profile() {
   document.title = 'DumbMerch | ' + title;
 
   const [state] = useContext(UserContext);
-
-  // const [transactions, setTransactions] = useState([]);
 
   let { data: profile } = useQuery('profileCache', async () => {
     const response = await API.get('/profile');

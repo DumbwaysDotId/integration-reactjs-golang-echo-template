@@ -30,8 +30,8 @@ export default function DetailProduct() {
       };
 
       const data = {
-        idProduct: product.id,
-        idSeller: product.user.id,
+        productId: product.id,
+        sellerId: product.user.id,
         price: product.price,
       };
 

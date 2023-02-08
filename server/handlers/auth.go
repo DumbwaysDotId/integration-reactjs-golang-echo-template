@@ -3,18 +3,18 @@ package handlers
 import (
 	authdto "dumbmerch/dto/auth"
 	dto "dumbmerch/dto/result"
-	"dumbmerch/models"
-	"dumbmerch/pkg/bcrypt"
-	jwtToken "dumbmerch/pkg/jwt"
-	"dumbmerch/repositories"
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"dumbmerch/models"
+	"dumbmerch/pkg/bcrypt"
+	jwtToken "dumbmerch/pkg/jwt"
+	"dumbmerch/repositories"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/labstack/echo/v4"
 )
 
 type handlerAuth struct {
@@ -25,61 +25,41 @@ func HandlerAuth(AuthRepository repositories.AuthRepository) *handlerAuth {
 	return &handlerAuth{AuthRepository}
 }
 
-func (h *handlerAuth) Register(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	request := new(authdto.RegisterRequest)
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
+func (h *handlerAuth) Register(c echo.Context) error {
+	request := new(authdto.AuthRequest)
+	if err := c.Bind(request); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
 	validation := validator.New()
 	err := validation.Struct(request)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
 	password, err := bcrypt.HashingPassword(request.Password)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
 	user := models.User{
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: password,
-		Status: "customer",
 	}
 
 	data, err := h.AuthRepository.Register(user)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		response := dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
 
-	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: http.StatusOK, Data: convertResponse(data)}
-	json.NewEncoder(w).Encode(response)
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: data})
 }
 
-func (h *handlerAuth) Login(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
+func (h *handlerAuth) Login(c echo.Context) error {
 	request := new(authdto.LoginRequest)
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
+	if err := c.Bind(request); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
 	user := models.User{
@@ -90,69 +70,42 @@ func (h *handlerAuth) Login(w http.ResponseWriter, r *http.Request) {
 	// Check email
 	user, err := h.AuthRepository.Login(user.Email)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
 	// Check password
 	isValid := bcrypt.CheckPasswordHash(request.Password, user.Password)
 	if !isValid {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: "wrong email or password"}
-		json.NewEncoder(w).Encode(response)
-		return
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "wrong email or password"})
 	}
 
 	//generate token
 	claims := jwt.MapClaims{}
 	claims["id"] = user.ID
-	claims["exp"] = time.Now().Add(time.Hour * 2).Unix() // 2 jam expired
+	claims["exp"] = time.Now().Add(time.Hour * 2).Unix() // 2 hours expired
 
 	token, errGenerateToken := jwtToken.GenerateToken(&claims)
 	if errGenerateToken != nil {
 		log.Println(errGenerateToken)
-		fmt.Println("Unauthorize")
-		return
+		return echo.NewHTTPError(http.StatusUnauthorized)
 	}
 
 	loginResponse := authdto.LoginResponse{
-		Id:       user.ID,
 		Name:     user.Name,
 		Email:    user.Email,
-		Status:   user.Status,
+		Password: user.Password,
+		Role:     user.Role,
 		Token:    token,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	response := dto.SuccessResult{Code: http.StatusOK, Data: loginResponse}
-	json.NewEncoder(w).Encode(response)
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: loginResponse})
 }
 
-func (h *handlerAuth) CheckAuth(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func (h *handlerAuth) CheckAuth(c echo.Context) error {
+	userLogin := c.Get("userLogin")
+	userId := userLogin.(jwt.MapClaims)["id"].(float64)
 
-	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
-	userId := int(userInfo["id"].(float64))
+	user, _ := h.AuthRepository.CheckAuth(int(userId))
 
-	// Check User by Id
-	user, err := h.AuthRepository.Getuser(userId)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
-	}
-
-	CheckAuthResponse := authdto.CheckAuthResponse{
-		Id:       user.ID,
-		Name:     user.Name,
-		Email:    user.Email,
-		Status:   user.Status,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	response := dto.SuccessResult{Code: http.StatusOK, Data: CheckAuthResponse}
-	json.NewEncoder(w).Encode(response)
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: user})
 }

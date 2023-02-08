@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
-import { useParams, useNavigate } from 'react-router';
-import { useQuery, useMutation } from 'react-query';
+import React, { useEffect, useState } from 'react';
+import { Button, Col, Container, Row } from 'react-bootstrap';
+import { useMutation, useQuery } from 'react-query';
+import { useNavigate, useParams } from 'react-router';
 
-import NavbarAdmin from '../components/NavbarAdmin';
 import CheckBox from '../components/form/CheckBox';
+import NavbarAdmin from '../components/NavbarAdmin';
 
-import dataProduct from '../fakeData/product';
 
 import { API } from '../config/api';
 
@@ -116,9 +115,8 @@ export default function UpdateProductAdmin() {
       formData.set('qty', form.qty);
       formData.set('categoryId', categoryId);
 
-      // Insert product data
       const response = await API.patch(
-        '/product/' + product.id,
+        '/product/' + id,
         formData,
         config
       );

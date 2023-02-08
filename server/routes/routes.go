@@ -1,15 +1,11 @@
 package routes
 
-import (
-	"github.com/gorilla/mux"
-)
+import "github.com/labstack/echo/v4"
 
-func RouteInit(r *mux.Router) {
-	UserRoutes(r)
-	ProfileRoutes(r)
-	ProductRoutes(r)
-	AuthRoutes(r)
-	TransactionRoutes(r)
-	CategoryRoutes(r)
+func RouteInit(e *echo.Group) {
+	UserRoutes(e)
+	ProfileRoutes(e)
+	ProductRoutes(e)
+	AuthRoutes(e)
+	CategoryRoutes(e)
 }
-

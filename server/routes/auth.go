@@ -6,14 +6,14 @@ import (
 	"dumbmerch/pkg/mysql"
 	"dumbmerch/repositories"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
-func AuthRoutes(r *mux.Router) {
-	userRepository := repositories.RepositoryUser(mysql.DB)
-	h := handlers.HandlerAuth(userRepository)
+func AuthRoutes(e *echo.Group) {
+	authRepository := repositories.RepositoryAuth(mysql.DB)
+	h := handlers.HandlerAuth(authRepository)
 
-	r.HandleFunc("/register", h.Register).Methods("POST")
-	r.HandleFunc("/login", h.Login).Methods("POST")
-	r.HandleFunc("/check-auth", middleware.Auth(h.CheckAuth)).Methods("GET")
+	e.POST("/register", h.Register)
+	e.POST("/login", h.Login)                          // add this code
+	e.GET("/check-auth", middleware.Auth(h.CheckAuth)) // add this code
 }

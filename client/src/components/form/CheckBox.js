@@ -1,4 +1,4 @@
-import React, { createElement, useState, useEffect } from "react";
+import { createElement, useEffect, useState } from "react";
 
 export default function CheckBox(props) {
   const { value, handleChangeCategoryId, categoryId } = props;

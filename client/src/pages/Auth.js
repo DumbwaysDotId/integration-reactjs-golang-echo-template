@@ -1,5 +1,5 @@
-import { useContext, useState } from "react";
-import { Container, Row, Col } from "react-bootstrap";
+import { useContext, useEffect, useState } from "react";
+import { Col, Container, Row } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { UserContext } from "../context/userContext";
@@ -15,11 +15,14 @@ export default function Auth() {
   const [state] = useContext(UserContext);
 
   const checkAuth = () => {
-    if (state.isLogin === true) {
+    if (state.isLogin) {
       navigate("/");
     }
   };
-  checkAuth();
+
+  useEffect(() => {
+    checkAuth();
+  }, [])
 
   const [isRegister, setIsRegister] = useState(false);
 

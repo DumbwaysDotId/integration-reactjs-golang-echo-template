@@ -5,10 +5,11 @@ import (
 	dto "dumbmerch/dto/result"
 	"dumbmerch/models"
 	"dumbmerch/repositories"
-	"encoding/json"
-	"net/http"
 
-	"github.com/golang-jwt/jwt/v4"
+	"net/http"
+	"strconv"
+
+	"github.com/labstack/echo/v4"
 )
 
 type handlerProfile struct {
@@ -19,24 +20,16 @@ func HandlerProfile(ProfileRepository repositories.ProfileRepository) *handlerPr
 	return &handlerProfile{ProfileRepository}
 }
 
-func (h *handlerProfile) GetProfile(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
-	userId := int(userInfo["id"].(float64))
+func (h *handlerProfile) GetProfile(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
 
 	var profile models.Profile
-	profile, err := h.ProfileRepository.GetProfile(userId)
+	profile, err := h.ProfileRepository.GetProfile(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		response := dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()}
-		json.NewEncoder(w).Encode(response)
-		return
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	w.WriteHeader(http.StatusOK)
-	response := dto.SuccessResult{Code: http.StatusOK, Data: convertResponseProfile(profile)}
-	json.NewEncoder(w).Encode(response)
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: convertResponseProfile(profile)})
 }
 
 func convertResponseProfile(u models.Profile) profiledto.ProfileResponse {

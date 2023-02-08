@@ -11,7 +11,7 @@ type UserRepository interface {
 	GetUser(ID int) (models.User, error)
 	CreateUser(user models.User) (models.User, error)
 	UpdateUser(user models.User) (models.User, error)
-	DeleteUser(user models.User) (models.User, error)
+	DeleteUser(user models.User, ID int) (models.User, error)
 }
 
 func RepositoryUser(db *gorm.DB) *repository {
@@ -20,14 +20,14 @@ func RepositoryUser(db *gorm.DB) *repository {
 
 func (r *repository) FindUsers() ([]models.User, error) {
 	var users []models.User
-	err := r.db.Preload("Profile").Preload("Products").Find(&users).Error
+	err := r.db.Preload("Profile").Preload("Products").Find(&users).Error // add this code
 
 	return users, err
 }
 
 func (r *repository) GetUser(ID int) (models.User, error) {
 	var user models.User
-	err := r.db.Preload("Profile").Preload("Products").First(&user, ID).Error
+	err := r.db.Preload("Profile").Preload("Products").First(&user, ID).Error // add this code
 
 	return user, err
 }
@@ -44,8 +44,8 @@ func (r *repository) UpdateUser(user models.User) (models.User, error) {
 	return user, err
 }
 
-func (r *repository) DeleteUser(user models.User) (models.User, error) {
-	err := r.db.Delete(&user).Error
+func (r *repository) DeleteUser(user models.User, ID int) (models.User, error) {
+	err := r.db.Delete(&user, ID).Scan(&user).Error
 
 	return user, err
 }

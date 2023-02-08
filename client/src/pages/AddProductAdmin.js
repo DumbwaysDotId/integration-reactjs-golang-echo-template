@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router';
+import React, { useEffect, useState } from 'react';
+import { Button, Col, Container, Row } from 'react-bootstrap';
 import { useMutation } from 'react-query';
+import { useNavigate } from 'react-router';
 
 import NavbarAdmin from '../components/NavbarAdmin';
 
 import { API } from '../config/api';
 
 export default function AddProductAdmin() {
-  console.clear();
   const title = 'Product admin';
   document.title = 'DumbMerch | ' + title;
 
@@ -91,11 +90,11 @@ export default function AddProductAdmin() {
 
       // Insert product data
       const response = await API.post('/product', formData, config);
-      console.log(response);
+      console.log("add product success : ", response);
 
       navigate('/product-admin');
     } catch (error) {
-      console.log(error);
+      console.log("add product failed : ", error);
     }
   });
 

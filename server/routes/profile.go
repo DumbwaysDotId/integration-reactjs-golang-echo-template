@@ -2,16 +2,15 @@ package routes
 
 import (
 	"dumbmerch/handlers"
-	"dumbmerch/pkg/middleware"
 	"dumbmerch/pkg/mysql"
 	"dumbmerch/repositories"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
-func ProfileRoutes(r *mux.Router) {
+func ProfileRoutes(e *echo.Group) {
 	profileRepository := repositories.RepositoryProfile(mysql.DB)
 	h := handlers.HandlerProfile(profileRepository)
 
-	r.HandleFunc("/profile", middleware.Auth(h.GetProfile)).Methods("GET")
+	e.GET("/profile/:id", h.GetProfile)
 }

@@ -1,5 +1,4 @@
-import React, { useContext, useState } from 'react';
-import { UserContext } from '../../context/userContext';
+import React, { useState } from 'react';
 import { Alert } from 'react-bootstrap';
 import { useMutation } from 'react-query';
 
@@ -8,8 +7,6 @@ import { API } from '../../config/api';
 export default function Register() {
   const title = 'Register';
   document.title = 'DumbMerch | ' + title;
-
-  const [state, dispatch] = useContext(UserContext);
 
   const [message, setMessage] = useState(null);
   const [form, setForm] = useState({
@@ -31,48 +28,29 @@ export default function Register() {
     try {
       e.preventDefault();
 
-      // Configuration Content-type
-      const config = {
-        headers: {
-          'Content-type': 'application/json',
-        },
-      };
+      const response = await API.post('/register', form);
 
-      // Data body
-      const body = JSON.stringify(form);
+      console.log("register success : ", response)
 
-      // Insert data user to database
-      const response = await API.post('/register', body, config);
-
-      // Notification
-      if (response.data.status === 'success...') {
-        const alert = (
-          <Alert variant="success" className="py-1">
-            Success
-          </Alert>
-        );
-        setMessage(alert);
-        setForm({
-          name: '',
-          email: '',
-          password: '',
-        });
-      } else {
-        const alert = (
-          <Alert variant="danger" className="py-1">
-            Failed
-          </Alert>
-        );
-        setMessage(alert);
-      }
-    } catch (error) {
       const alert = (
-        <Alert variant="danger" className="py-1">
-          Failed
+        <Alert variant="success" className="py-1">
+          Register success!
         </Alert>
       );
       setMessage(alert);
-      console.log(error);
+      setForm({
+        name: '',
+        email: '',
+        password: '',
+      });
+    } catch (error) {
+      const alert = (
+        <Alert variant="danger" className="py-1">
+          Failed to register!
+        </Alert>
+      );
+      setMessage(alert);
+      console.log("register failed : ", error);
     }
   });
 

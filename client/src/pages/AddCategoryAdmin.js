@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router';
+import { Button, Col, Container, Row } from 'react-bootstrap';
 import { useMutation } from 'react-query';
+import { useNavigate } from 'react-router';
 
 import NavbarAdmin from '../components/NavbarAdmin';
-
-import dataCategory from '../fakeData/category';
-
 import { API } from '../config/api';
 
 export default function AddCategoryAdmin() {
-  console.clear();
-
   let navigate = useNavigate();
   const [category, setCategory] = useState('');
 
@@ -39,9 +34,10 @@ export default function AddCategoryAdmin() {
       // Insert category data
       const response = await API.post('/category', body, config);
 
+      console.log("add category success : ", response);
       navigate('/category-admin');
     } catch (error) {
-      console.log(error);
+      console.log("add category failed : ", error);
     }
   });
 

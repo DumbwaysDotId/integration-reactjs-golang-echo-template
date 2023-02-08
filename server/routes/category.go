@@ -5,16 +5,16 @@ import (
 	"dumbmerch/pkg/mysql"
 	"dumbmerch/repositories"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
-func CategoryRoutes(r *mux.Router) {
+func CategoryRoutes(e *echo.Group) {
 	categoryRepository := repositories.RepositoryCategory(mysql.DB)
 	h := handlers.HandlerCategory(categoryRepository)
 
-	r.HandleFunc("/categories", h.FindCategories).Methods("GET")
-	r.HandleFunc("/category/{id}", h.GetCategory).Methods("GET")
-	r.HandleFunc("/category", h.CreateCategory).Methods("POST")
-	r.HandleFunc("/category/{id}", h.UpdateCategory).Methods("PATCH")
-	r.HandleFunc("/category/{id}", h.DeleteCategory).Methods("DELETE")
+	e.GET("/categories", h.FindCategories)
+	e.GET("/category/:id", h.GetCategory)
+	e.POST("/category", h.CreateCategory)
+	e.DELETE("/category/:id", h.DeleteCategory)
+	e.PATCH("/category/:id", h.UpdateCategory)
 }

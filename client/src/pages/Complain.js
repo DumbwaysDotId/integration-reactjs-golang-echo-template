@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Container, Row, Col } from 'react-bootstrap'
+import { Col, Container, Row } from 'react-bootstrap'
 
-import Navbar from '../components/Navbar'
-import Contact from '../components/complain/Contact'
 import Chat from '../components/complain/Chat'
+import Contact from '../components/complain/Contact'
+import Navbar from '../components/Navbar'
 
 export default function Complain() {
     const [contact, setContact] = useState(null)
@@ -29,12 +29,12 @@ export default function Complain() {
     return (
         <>
             <Navbar title={title} />
-            <Container fluid style={{height: '89.5vh'}}>
+            <Container fluid style={{ height: '89.5vh' }}>
                 <Row>
-                    <Col md={3} style={{height: '89.5vh'}} className="px-3 border-end border-dark overflow-auto">
-                        <Contact dataContact={dataContact}  setContact={setContact} contact={contact} />
+                    <Col md={3} style={{ height: '89.5vh' }} className="px-3 border-end border-dark overflow-auto">
+                        <Contact dataContact={dataContact} setContact={setContact} contact={contact} />
                     </Col>
-                    <Col md={9} style={{maxHeight: '89.5vh'}} className="px-0">
+                    <Col md={9} style={{ maxHeight: '89.5vh' }} className="px-0">
                         <Chat contact={contact} />
                     </Col>
                 </Row>

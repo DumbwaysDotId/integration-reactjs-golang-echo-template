@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	categoriesdto "dumbmerch/dto/category"
 	dto "dumbmerch/dto/result"
+	usersdto "dumbmerch/dto/user"
 	"dumbmerch/models"
 	"dumbmerch/repositories"
 	"net/http"
@@ -12,36 +12,36 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type handlerCategory struct {
-	CategoryRepository repositories.CategoryRepository
+type handler struct {
+	UserRepository repositories.UserRepository
 }
 
-func HandlerCategory(CategoryRepository repositories.CategoryRepository) *handlerCategory {
-	return &handlerCategory{CategoryRepository}
+func HandlerUser(UserRepository repositories.UserRepository) *handler {
+	return &handler{UserRepository}
 }
 
-func (h *handlerCategory) FindCategories(c echo.Context) error {
-	categories, err := h.CategoryRepository.FindCategories()
+func (h *handler) FindUsers(c echo.Context) error {
+	users, err := h.UserRepository.FindUsers()
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: categories})
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: users})
 }
 
-func (h *handlerCategory) GetCategory(c echo.Context) error {
+func (h *handler) GetUser(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	category, err := h.CategoryRepository.GetCategory(id)
+	user, err := h.UserRepository.GetUser(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: category})
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: user})
 }
 
-func (h *handlerCategory) CreateCategory(c echo.Context) error {
-	request := new(categoriesdto.CreateCategoryRequest)
+func (h *handler) CreateUser(c echo.Context) error {
+	request := new(usersdto.CreateUserRequest)
 	if err := c.Bind(request); err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
@@ -52,27 +52,29 @@ func (h *handlerCategory) CreateCategory(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	category := models.Category{
-		Name: request.Name,
+	user := models.User{
+		Name:     request.Name,
+		Email:    request.Email,
+		Password: request.Password,
 	}
 
-	data, err := h.CategoryRepository.CreateCategory(category)
+	data, err := h.UserRepository.CreateUser(user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: data})
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: convertResponse(data)})
 }
 
-func (h *handlerCategory) UpdateCategory(c echo.Context) error {
-	request := new(categoriesdto.UpdateCategoryRequest)
+func (h *handler) UpdateUser(c echo.Context) error {
+	request := new(usersdto.UpdateUserRequest)
 	if err := c.Bind(request); err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	user, err := h.CategoryRepository.GetCategory(id)
+	user, err := h.UserRepository.GetUser(id)
 
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
@@ -82,26 +84,43 @@ func (h *handlerCategory) UpdateCategory(c echo.Context) error {
 		user.Name = request.Name
 	}
 
-	data, err := h.CategoryRepository.UpdateCategory(user)
+	if request.Email != "" {
+		user.Email = request.Email
+	}
+
+	if request.Password != "" {
+		user.Password = request.Password
+	}
+
+	data, err := h.UserRepository.UpdateUser(user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: data})
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: convertResponse(data)})
 }
 
-func (h *handlerCategory) DeleteCategory(c echo.Context) error {
+func (h *handler) DeleteUser(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	category, err := h.CategoryRepository.GetCategory(id)
+	user, err := h.UserRepository.GetUser(id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	data, err := h.CategoryRepository.DeleteCategory(category, id)
+	data, err := h.UserRepository.DeleteUser(user, id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: data})
+	return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: convertResponse(data)})
+}
+
+func convertResponse(u models.User) usersdto.UserResponse {
+	return usersdto.UserResponse{
+		ID:       u.ID,
+		Name:     u.Name,
+		Email:    u.Email,
+		Password: u.Password,
+	}
 }
