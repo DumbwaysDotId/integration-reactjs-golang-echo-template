@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
@@ -74,7 +73,7 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "Error: category_id form value is missing."})
 	}
 
-	request := productdto.ProductRequest{
+	request := productdto.CreateProductRequest{
 		Name:       c.FormValue("name"),
 		Desc:       c.FormValue("desc"),
 		Price:      price,
@@ -115,22 +114,20 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 }
 
 func (h *handlerProduct) UpdateProduct(c echo.Context) error {
+	var err error
 	dataFile := c.Get("dataFile").(string)
 
 	price, _ := strconv.Atoi(c.FormValue("price"))
 	qty, _ := strconv.Atoi(c.FormValue("qty"))
 
+	var categoriesId []int
 	categoryIdString := c.FormValue("category_id")
-	categoryIds := strings.Split(categoryIdString, ",")
-	categoriesId := make([]int, 0, len(categoryIds))
-	for _, idStr := range categoryIds {
-		id, err := strconv.Atoi(idStr)
-		if err == nil {
-			categoriesId = append(categoriesId, id)
-		}
+	err = json.Unmarshal([]byte(categoryIdString), &categoriesId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}
 
-	request := productdto.ProductRequest{
+	request := productdto.UpdateProductRequest{
 		Name:       c.FormValue("name"),
 		Desc:       c.FormValue("desc"),
 		Price:      price,
@@ -140,7 +137,7 @@ func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 	}
 
 	validation := validator.New()
-	err := validation.Struct(request)
+	err = validation.Struct(request)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
@@ -165,13 +162,25 @@ func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 		product.Price = request.Price
 	}
 
-	if dataFile != "" {
-		product.Image = dataFile
+	if request.Image != "" {
+		product.Image = request.Image
 	}
 
 	if request.Qty != 0 {
 		product.Qty = request.Qty
 	}
+
+	if len(request.CategoryID) == 0 {
+		data, err := h.ProductRepository.DeleteProductCategoryByProductId(product)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
+		}
+
+		return c.JSON(http.StatusOK, dto.SuccessResult{Code: http.StatusOK, Data: data})
+	}
+
+	categories, _ := h.ProductRepository.FindCategoriesById(request.CategoryID)
+	product.Category = categories
 
 	data, err := h.ProductRepository.UpdateProduct(product)
 	if err != nil {

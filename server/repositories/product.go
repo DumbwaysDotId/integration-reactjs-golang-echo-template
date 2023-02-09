@@ -13,6 +13,7 @@ type ProductRepository interface {
 	UpdateProduct(product models.Product) (models.Product, error)
 	DeleteProduct(product models.Product, ID int) (models.Product, error)
 	FindCategoriesById(categoriesId []int) ([]models.Category, error)
+	DeleteProductCategoryByProductId(product models.Product) (models.Product, error)
 }
 
 func RepositoryProduct(db *gorm.DB) *repository {
@@ -41,6 +42,7 @@ func (r *repository) CreateProduct(product models.Product) (models.Product, erro
 }
 
 func (r *repository) UpdateProduct(product models.Product) (models.Product, error) {
+	r.db.Exec("DELETE FROM product_categories WHERE product_id=?", product.ID)
 	err := r.db.Save(&product).Error
 
 	return product, err
@@ -57,4 +59,11 @@ func (r *repository) FindCategoriesById(categoriesId []int) ([]models.Category, 
 	err := r.db.Find(&categories, categoriesId).Error
 
 	return categories, err
+}
+
+func (r *repository) DeleteProductCategoryByProductId(product models.Product) (models.Product, error) {
+	r.db.Exec("DELETE FROM product_categories WHERE product_id=?", product.ID)
+	err := r.db.Preload("User").Preload("Category").First(&product, product.ID).Error // add this code
+
+	return product, err
 }
