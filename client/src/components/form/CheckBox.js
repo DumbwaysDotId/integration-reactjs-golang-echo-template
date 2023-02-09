@@ -7,7 +7,6 @@ export default function CheckBox(props) {
 
   const getIsChecked = () => {
     const checked = categoryId.includes(value)
-    console.log(checked);
     setIsChecked(checked);
   };
 
