@@ -16,65 +16,60 @@ export default function UpdateProductAdmin() {
   let navigate = useNavigate();
   const { id } = useParams();
 
+  const [isLoading, setIsLoading] = useState(true); //Store all category data
   const [categories, setCategories] = useState([]); //Store all category data
-  const [categoryId, setCategoryId] = useState([]); //Save the selected category id
   const [preview, setPreview] = useState(null); //For image preview
-  const [product, setProduct] = useState({}); //Store product data
   const [form, setForm] = useState({
     image: '',
     name: '',
     desc: '',
     price: '',
     qty: '',
+    category_id: []
   }); //Store product data
 
-  // Fetching detail product data by id from database
-  let { data: products, refetch } = useQuery('productCache', async () => {
-    const response = await API.get('/product/' + id);
-    return response.data.data;
-  });
 
-  // Fetching category data
-  let { data: categoriesData, refetch: refetchCategories } = useQuery(
-    'categoriesCache',
-    async () => {
-      const response = await API.get('/categories');
-      return response.data.data;
-    }
-  );
+  async function getDataUpdate() {
+    const responseProduct = await API.get('/product/' + id);
+    const responseCategories = await API.get('/categories');
+    setCategories(responseCategories.data.data);
+    setPreview(responseProduct.data.data.image);
+
+    const newCategoryId = responseProduct.data.data?.category?.map((item) => {
+      return item.id;
+    });
+
+    setForm({
+      ...form,
+      name: responseProduct.data.data.name,
+      desc: responseProduct.data.data.desc,
+      price: responseProduct.data.data.price,
+      qty: responseProduct.data.data.qty,
+      category_id: newCategoryId
+    });
+    setIsLoading(false)
+  }
 
   useEffect(() => {
-    if (products) {
-      setPreview(products.image);
-      setForm({
-        ...form,
-        name: products.name,
-        desc: products.desc,
-        price: products.price,
-        qty: products.qty,
-      });
-      setProduct(products);
-    }
-
-    if (categoriesData) {
-      setCategories(categoriesData);
-    }
-  }, [products]);
+    getDataUpdate()
+  }, []);
 
   // For handle if category selected
-  const handleChangeCategoryId = (e) => {
-    const id = e.target.value;
+  const handleChangeCategoryId = (e, setIsChecked) => {
+    const id = parseInt(e.target.value);
     const checked = e.target.checked;
 
     if (checked) {
       // Save category id if checked
-      setCategoryId([...categoryId, parseInt(id)]);
+      setForm({ ...form, category_id: [...form.category_id, id] });
+      setIsChecked(true)
     } else {
       // Delete category id from variable if unchecked
-      let newCategoryId = categoryId.filter((categoryIdItem) => {
-        return categoryIdItem != id;
+      let newCategoryId = form?.category_id?.filter((categoryId) => {
+        return categoryId != id;
       });
-      setCategoryId(newCategoryId);
+      setForm({ ...form, category_id: newCategoryId });
+      setIsChecked(false)
     }
   };
 
@@ -113,7 +108,9 @@ export default function UpdateProductAdmin() {
       formData.set('desc', form.desc);
       formData.set('price', form.price);
       formData.set('qty', form.qty);
-      formData.set('categoryId', categoryId);
+      let category_id = form.category_id.map((categoryId) => Number(categoryId))
+      formData.set('category_id', JSON.stringify(category_id));
+
 
       const response = await API.patch(
         '/product/' + id,
@@ -128,13 +125,6 @@ export default function UpdateProductAdmin() {
     }
   });
 
-  useEffect(() => {
-    const newCategoryId = product?.categories?.map((item) => {
-      return item.id;
-    });
-
-    setCategoryId(newCategoryId);
-  }, [product]);
 
   return (
     <>
@@ -166,7 +156,7 @@ export default function UpdateProductAdmin() {
                 hidden
                 onChange={handleChange}
               />
-              <label for="upload" className="label-file-add-product">
+              <label htmlFor="upload" className="label-file-add-product">
                 Upload file
               </label>
               <input
@@ -209,17 +199,16 @@ export default function UpdateProductAdmin() {
                 >
                   Category
                 </div>
-                {product &&
-                  categories?.map((item, index) => (
-                    <label key={index} className="checkbox-inline me-4">
-                      <CheckBox
-                        categoryId={categoryId}
-                        value={item?.id}
-                        handleChangeCategoryId={handleChangeCategoryId}
-                      />
-                      <span className="ms-2">{item?.name}</span>
-                    </label>
-                  ))}
+                {!isLoading && categories?.map((item, index) => (
+                  <label key={index} className="checkbox-inline me-4">
+                    <CheckBox
+                      categoryId={form?.category_id}
+                      value={item?.id}
+                      handleChangeCategoryId={handleChangeCategoryId}
+                    />
+                    <span className="ms-2">{item?.name}</span>
+                  </label>))
+                }
               </div>
 
               <div className="d-grid gap-2 mt-4">

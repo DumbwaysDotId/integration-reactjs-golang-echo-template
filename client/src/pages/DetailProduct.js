@@ -14,7 +14,7 @@ export default function DetailProduct() {
   let navigate = useNavigate();
   let { id } = useParams();
 
-  let { data: product } = useQuery('productCache', async () => {
+  let { data: product } = useQuery('productDetailCache', async () => {
     const response = await API.get('/product/' + id);
     return response.data.data;
   });

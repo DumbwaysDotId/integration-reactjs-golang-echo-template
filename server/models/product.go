@@ -11,7 +11,7 @@ type Product struct {
 	Qty        int                  `json:"qty" form:"qty"`
 	UserID     int                  `json:"user_id" form:"user_id"`
 	User       UsersProfileResponse `json:"user"`
-	Category   []Category           `json:"category" gorm:"many2many:product_categories"`
+	Category   []Category           `json:"category" gorm:"many2many:product_categories;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	CategoryID []int                `json:"category_id" form:"category_id" gorm:"-"`
 	CreatedAt  time.Time            `json:"-"`
 	UpdatedAt  time.Time            `json:"-"`

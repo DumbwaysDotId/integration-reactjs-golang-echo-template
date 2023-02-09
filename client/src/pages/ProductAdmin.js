@@ -25,7 +25,7 @@ export default function ProductAdmin() {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
-  let { data: products, refetch } = useQuery('productsCache', async () => {
+  let { data: products, refetch } = useQuery('productsAdminCache', async () => {
     const response = await API.get('/products');
     return response.data.data;
   });

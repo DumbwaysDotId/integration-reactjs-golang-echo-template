@@ -84,7 +84,8 @@ export default function AddProductAdmin() {
       formData.set('desc', form.desc);
       formData.set('price', form.price);
       formData.set('qty', form.qty);
-      formData.set('categoryId', form.category_id);
+      let category_id = form.category_id.map((categoryId) => Number(categoryId))
+      formData.set('category_id', JSON.stringify(category_id));
 
       // Insert product data
       const response = await API.post('/product', formData, config);
@@ -130,7 +131,7 @@ export default function AddProductAdmin() {
                 hidden
                 onChange={handleChange}
               />
-              <label for="upload" className="label-file-add-product">
+              <label htmlFor="upload" className="label-file-add-product">
                 Upload file
               </label>
               <input
