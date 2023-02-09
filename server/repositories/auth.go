@@ -18,6 +18,7 @@ func RepositoryAuth(db *gorm.DB) *repository {
 
 func (r *repository) Register(user models.User) (models.User, error) {
 	err := r.db.Create(&user).Error
+	r.db.Exec("INSERT INTO profiles(user_id) VALUES (?)", user.ID) // we also make profile directly after user created
 
 	return user, err
 }

@@ -2,6 +2,7 @@ package routes
 
 import (
 	"dumbmerch/handlers"
+	"dumbmerch/pkg/middleware"
 	"dumbmerch/pkg/mysql"
 	"dumbmerch/repositories"
 
@@ -12,5 +13,5 @@ func ProfileRoutes(e *echo.Group) {
 	profileRepository := repositories.RepositoryProfile(mysql.DB)
 	h := handlers.HandlerProfile(profileRepository)
 
-	e.GET("/profile/:id", h.GetProfile)
+	e.GET("/profile", middleware.Auth(h.GetProfile))
 }

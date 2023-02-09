@@ -7,16 +7,16 @@ import (
 )
 
 type ProfileRepository interface {
-	GetProfile(ID int) (models.Profile, error)
+	GetProfile(userId int) (models.Profile, error)
 }
 
 func RepositoryProfile(db *gorm.DB) *repository {
 	return &repository{db}
 }
 
-func (r *repository) GetProfile(ID int) (models.Profile, error) {
+func (r *repository) GetProfile(userId int) (models.Profile, error) {
 	var profile models.Profile
-	err := r.db.Preload("User").First(&profile, ID).Error
+	err := r.db.Preload("User").First(&profile, "user_id=?", userId).Error
 
 	return profile, err
 }

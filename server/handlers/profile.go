@@ -7,8 +7,8 @@ import (
 	"dumbmerch/repositories"
 
 	"net/http"
-	"strconv"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,10 +21,10 @@ func HandlerProfile(ProfileRepository repositories.ProfileRepository) *handlerPr
 }
 
 func (h *handlerProfile) GetProfile(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
+	userId := c.Get("userLogin").(jwt.MapClaims)["id"].(float64)
 
 	var profile models.Profile
-	profile, err := h.ProfileRepository.GetProfile(id)
+	profile, err := h.ProfileRepository.GetProfile(int(userId))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
 	}

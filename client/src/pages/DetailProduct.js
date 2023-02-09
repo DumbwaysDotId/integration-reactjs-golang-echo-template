@@ -30,18 +30,18 @@ export default function DetailProduct() {
       };
 
       const data = {
-        productId: product.id,
-        sellerId: product.user.id,
+        product_id: product.id,
+        seller_id: product.user.id,
         price: product.price,
       };
 
       const body = JSON.stringify(data);
 
-      await API.post('/transaction', body, config);
-
+      const response = await API.post('/transaction', body, config);
+      console.log("transaction success :", response)
       navigate('/profile');
     } catch (error) {
-      console.log(error);
+      console.log("transaction failed : ", error);
     }
   });
 
