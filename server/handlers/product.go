@@ -5,8 +5,10 @@ import (
 	dto "dumbmerch/dto/result"
 	"dumbmerch/models"
 	"dumbmerch/repositories"
+	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
@@ -51,11 +53,26 @@ func (h *handlerProduct) GetProduct(c echo.Context) error {
 }
 
 func (h *handlerProduct) CreateProduct(c echo.Context) error {
+	var err error
 	dataFile := c.Get("dataFile").(string)
 
 	price, _ := strconv.Atoi(c.FormValue("price"))
 	qty, _ := strconv.Atoi(c.FormValue("qty"))
-	category_id, _ := strconv.Atoi(c.FormValue("category_id"))
+
+	categoryIdString := c.FormValue("category_id")
+	if categoryIdString == "" {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "Error: category_id form value is missing."})
+	}
+
+	var categoriesId []int
+	err = json.Unmarshal([]byte(categoryIdString), &categoriesId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
+	}
+
+	if len(categoriesId) == 0 {
+		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: "Error: category_id form value is missing."})
+	}
 
 	request := productdto.ProductRequest{
 		Name:       c.FormValue("name"),
@@ -63,11 +80,11 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 		Price:      price,
 		Image:      dataFile,
 		Qty:        qty,
-		CategoryID: category_id,
+		CategoryID: categoriesId,
 	}
 
 	validation := validator.New()
-	err := validation.Struct(request)
+	err = validation.Struct(request)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
@@ -75,13 +92,16 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 	userLogin := c.Get("userLogin")
 	userId := userLogin.(jwt.MapClaims)["id"].(float64)
 
+	categories, _ := h.ProductRepository.FindCategoriesById(request.CategoryID)
+
 	product := models.Product{
-		Name:   request.Name,
-		Desc:   request.Desc,
-		Price:  request.Price,
-		Image:  request.Image,
-		Qty:    request.Qty,
-		UserID: int(userId),
+		Name:     request.Name,
+		Desc:     request.Desc,
+		Price:    request.Price,
+		Image:    request.Image,
+		Qty:      request.Qty,
+		Category: categories,
+		UserID:   int(userId),
 	}
 
 	product, err = h.ProductRepository.CreateProduct(product)
@@ -97,9 +117,32 @@ func (h *handlerProduct) CreateProduct(c echo.Context) error {
 func (h *handlerProduct) UpdateProduct(c echo.Context) error {
 	dataFile := c.Get("dataFile").(string)
 
-	request := new(productdto.ProductRequest)
-	if err := c.Bind(request); err != nil {
-		return c.JSON(http.StatusBadRequest, dto.ErrorResult{Code: http.StatusBadRequest, Message: err.Error()})
+	price, _ := strconv.Atoi(c.FormValue("price"))
+	qty, _ := strconv.Atoi(c.FormValue("qty"))
+
+	categoryIdString := c.FormValue("category_id")
+	categoryIds := strings.Split(categoryIdString, ",")
+	categoriesId := make([]int, 0, len(categoryIds))
+	for _, idStr := range categoryIds {
+		id, err := strconv.Atoi(idStr)
+		if err == nil {
+			categoriesId = append(categoriesId, id)
+		}
+	}
+
+	request := productdto.ProductRequest{
+		Name:       c.FormValue("name"),
+		Desc:       c.FormValue("desc"),
+		Price:      price,
+		Image:      dataFile,
+		Qty:        qty,
+		CategoryID: categoriesId,
+	}
+
+	validation := validator.New()
+	err := validation.Struct(request)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, dto.ErrorResult{Code: http.StatusInternalServerError, Message: err.Error()})
 	}
 
 	id, _ := strconv.Atoi(c.Param("id"))
@@ -156,6 +199,7 @@ func (h *handlerProduct) DeleteProduct(c echo.Context) error {
 
 func convertResponseProduct(u models.Product) models.ProductResponse {
 	return models.ProductResponse{
+		ID:       u.ID,
 		Name:     u.Name,
 		Desc:     u.Desc,
 		Price:    u.Price,

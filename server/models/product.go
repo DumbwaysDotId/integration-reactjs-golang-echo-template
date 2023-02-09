@@ -27,7 +27,7 @@ type ProductResponse struct {
 	UserID     int                  `json:"-"`
 	User       UsersProfileResponse `json:"user"`
 	Category   []Category           `json:"category" gorm:"many2many:product_categories"`
-	CategoryID []int                `json:"category_id" form:"category_id" gorm:"-"`
+	CategoryID []int                `json:"-" form:"-" gorm:"-"`
 }
 
 type ProductUserResponse struct {

@@ -14,7 +14,6 @@ export default function AddProductAdmin() {
   let navigate = useNavigate();
 
   const [categories, setCategories] = useState([]); //Store all category data
-  const [categoryId, setCategoryId] = useState([]); //Save the selected category id
   const [preview, setPreview] = useState(null); //For image preview
   const [form, setForm] = useState({
     image: '',
@@ -22,6 +21,7 @@ export default function AddProductAdmin() {
     desc: '',
     price: '',
     qty: '',
+    category_id: []
   }); //Store product data
 
   // Fetching category data
@@ -41,13 +41,13 @@ export default function AddProductAdmin() {
 
     if (checked) {
       // Save category id if checked
-      setCategoryId([...categoryId, parseInt(id)]);
+      setForm({ ...form, category_id: [...form.category_id, id] });
     } else {
       // Delete category id from variable if unchecked
-      let newCategoryId = categoryId.filter((categoryIdItem) => {
-        return categoryIdItem != id;
+      let newCategoryId = form.category_id.filter((categoryId) => {
+        return categoryId != id;
       });
-      setCategoryId(newCategoryId);
+      setForm({ ...form, category_id: newCategoryId });
     }
   };
 
@@ -84,9 +84,7 @@ export default function AddProductAdmin() {
       formData.set('desc', form.desc);
       formData.set('price', form.price);
       formData.set('qty', form.qty);
-      formData.set('categoryId', categoryId);
-
-      console.log(form);
+      formData.set('categoryId', form.category_id);
 
       // Insert product data
       const response = await API.post('/product', formData, config);

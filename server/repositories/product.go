@@ -12,6 +12,7 @@ type ProductRepository interface {
 	CreateProduct(product models.Product) (models.Product, error)
 	UpdateProduct(product models.Product) (models.Product, error)
 	DeleteProduct(product models.Product, ID int) (models.Product, error)
+	FindCategoriesById(categoriesId []int) ([]models.Category, error)
 }
 
 func RepositoryProduct(db *gorm.DB) *repository {
@@ -49,4 +50,11 @@ func (r *repository) DeleteProduct(product models.Product, ID int) (models.Produ
 	err := r.db.Delete(&product, ID).Scan(&product).Error
 
 	return product, err
+}
+
+func (r *repository) FindCategoriesById(categoriesId []int) ([]models.Category, error) {
+	var categories []models.Category
+	err := r.db.Find(&categories, categoriesId).Error
+
+	return categories, err
 }
