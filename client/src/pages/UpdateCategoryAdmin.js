@@ -1,11 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button, Col, Container, Row } from 'react-bootstrap';
-import { useMutation, useQuery } from 'react-query';
 import { useNavigate, useParams } from 'react-router';
 
 import NavbarAdmin from '../components/NavbarAdmin';
-
-import { API } from '../config/api';
 
 export default function UpdateCategoryAdmin() {
   const title = 'Category admin';
@@ -13,19 +10,6 @@ export default function UpdateCategoryAdmin() {
 
   let navigate = useNavigate();
   const { id } = useParams();
-  const [category, setCategory] = useState({ name: '' });
-
-  let { data: categoryData } = useQuery('categoryCache', async () => {
-    const response = await API.get('/category/' + id);
-    return response.data.data.name;
-  });
-
-  useEffect(() => {
-    if (categoryData) {
-      console.log(categoryData);
-      setCategory({ name: categoryData });
-    }
-  }, [categoryData]);
 
   const handleChange = (e) => {
     setCategory({
@@ -33,26 +17,6 @@ export default function UpdateCategoryAdmin() {
       name: e.target.value,
     });
   };
-
-  const handleSubmit = useMutation(async (e) => {
-    try {
-      e.preventDefault();
-
-      const config = {
-        headers: {
-          'Content-type': 'application/json',
-        },
-      };
-
-      const body = JSON.stringify(category);
-
-      await API.patch('/category/' + id, body, config);
-
-      navigate('/category-admin');
-    } catch (error) {
-      console.log(error);
-    }
-  });
 
   return (
     <>
