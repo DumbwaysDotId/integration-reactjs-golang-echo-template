@@ -1,19 +1,11 @@
 import React, { useState } from 'react';
 import { Alert } from 'react-bootstrap';
-import { useMutation } from 'react-query';
-
-import { API } from '../../config/api';
 
 export default function Register() {
   const title = 'Register';
   document.title = 'DumbMerch | ' + title;
 
   const [message, setMessage] = useState(null);
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
 
   const { name, email, password } = form;
 
@@ -23,36 +15,6 @@ export default function Register() {
       [e.target.name]: e.target.value,
     });
   };
-
-  const handleSubmit = useMutation(async (e) => {
-    try {
-      e.preventDefault();
-
-      const response = await API.post('/register', form);
-
-      console.log("register success : ", response)
-
-      const alert = (
-        <Alert variant="success" className="py-1">
-          Register success!
-        </Alert>
-      );
-      setMessage(alert);
-      setForm({
-        name: '',
-        email: '',
-        password: '',
-      });
-    } catch (error) {
-      const alert = (
-        <Alert variant="danger" className="py-1">
-          Failed to register!
-        </Alert>
-      );
-      setMessage(alert);
-      console.log("register failed : ", error);
-    }
-  });
 
   return (
     <div className="d-flex justify-content-center">

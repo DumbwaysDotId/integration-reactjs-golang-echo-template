@@ -1,38 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button, Col, Container, Row } from 'react-bootstrap';
-import { useMutation } from 'react-query';
 import { useNavigate } from 'react-router';
 
 import NavbarAdmin from '../components/NavbarAdmin';
-
-import { API } from '../config/api';
 
 export default function AddProductAdmin() {
   const title = 'Product admin';
   document.title = 'DumbMerch | ' + title;
 
   let navigate = useNavigate();
-
-  const [categories, setCategories] = useState([]); //Store all category data
-  const [preview, setPreview] = useState(null); //For image preview
-  const [form, setForm] = useState({
-    image: '',
-    name: '',
-    desc: '',
-    price: '',
-    qty: '',
-    category_id: []
-  }); //Store product data
-
-  // Fetching category data
-  const getCategories = async () => {
-    try {
-      const response = await API.get('/categories');
-      setCategories(response.data.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   // For handle if category selected
   const handleChangeCategoryId = (e) => {
@@ -65,41 +41,6 @@ export default function AddProductAdmin() {
       setPreview(url);
     }
   };
-
-  const handleSubmit = useMutation(async (e) => {
-    try {
-      e.preventDefault();
-
-      // Configuration
-      const config = {
-        headers: {
-          'Content-type': 'multipart/form-data',
-        },
-      };
-
-      // Store data with FormData as object
-      const formData = new FormData();
-      formData.set('image', form.image[0], form.image[0].name);
-      formData.set('name', form.name);
-      formData.set('desc', form.desc);
-      formData.set('price', form.price);
-      formData.set('qty', form.qty);
-      let category_id = form.category_id.map((categoryId) => Number(categoryId))
-      formData.set('category_id', JSON.stringify(category_id));
-
-      // Insert product data
-      const response = await API.post('/product', formData, config);
-      console.log("add product success : ", response);
-
-      navigate('/product-admin');
-    } catch (error) {
-      console.log("add product failed : ", error);
-    }
-  });
-
-  useEffect(() => {
-    getCategories();
-  }, []);
 
   return (
     <>
