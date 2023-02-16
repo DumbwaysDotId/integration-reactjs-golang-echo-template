@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button, Col, Container, Row, Table } from 'react-bootstrap';
-import { useMutation, useQuery } from 'react-query';
 import { useNavigate } from 'react-router';
+
 import ShowMoreText from 'react-show-more-text';
 import rupiahFormat from 'rupiah-format';
 
@@ -10,20 +10,11 @@ import NavbarAdmin from '../components/NavbarAdmin';
 
 import imgEmpty from '../assets/empty.svg';
 
-import { API } from '../config/api';
-
 export default function ProductAdmin() {
   let navigate = useNavigate();
 
   const title = 'Product admin';
   document.title = 'DumbMerch | ' + title;
-
-  const [idDelete, setIdDelete] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
-
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
 
   let { data: products, refetch } = useQuery('productsAdminCache', async () => {
     const response = await API.get('/products');
@@ -37,28 +28,6 @@ export default function ProductAdmin() {
   const handleUpdate = (id) => {
     navigate('/update-product/' + id);
   };
-
-  const handleDelete = (id) => {
-    setIdDelete(id);
-    handleShow();
-  };
-
-  const deleteById = useMutation(async (id) => {
-    try {
-      await API.delete(`/product/${id}`);
-      refetch();
-    } catch (error) {
-      console.log(error);
-    }
-  });
-
-  useEffect(() => {
-    if (confirmDelete) {
-      handleClose();
-      deleteById.mutate(idDelete);
-      setConfirmDelete(null);
-    }
-  }, [confirmDelete]);
 
   return (
     <>

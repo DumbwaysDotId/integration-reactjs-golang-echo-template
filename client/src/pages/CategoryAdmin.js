@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button, Col, Container, Row, Table } from 'react-bootstrap';
-import { useMutation, useQuery } from 'react-query';
+import { useQuery } from 'react-query';
 import { useNavigate } from 'react-router';
 
 import DeleteData from '../components/modal/DeleteData';
@@ -8,20 +8,11 @@ import NavbarAdmin from '../components/NavbarAdmin';
 
 import imgEmpty from '../assets/empty.svg';
 
-import { API } from '../config/api';
-
 export default function CategoryAdmin() {
   let navigate = useNavigate();
 
   const title = 'Category admin';
   document.title = 'DumbMerch | ' + title;
-
-  const [idDelete, setIdDelete] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
-
-  const [show, setShow] = useState(false);
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
 
   let { data: categories, refetch } = useQuery('categoriesCache', async () => {
     const response = await API.get('/categories');
@@ -31,28 +22,6 @@ export default function CategoryAdmin() {
   const handleEdit = (id) => {
     navigate(`/update-category/${id}`);
   };
-
-  const handleDelete = (id) => {
-    setIdDelete(id);
-    handleShow();
-  };
-
-  const deleteById = useMutation(async (id) => {
-    try {
-      await API.delete(`/category/${id}`);
-      refetch();
-    } catch (error) {
-      console.log(error);
-    }
-  });
-
-  useEffect(() => {
-    if (confirmDelete) {
-      handleClose();
-      deleteById.mutate(idDelete);
-      setConfirmDelete(null);
-    }
-  }, [confirmDelete]);
 
   const addCategory = () => {
     navigate('/add-category');
